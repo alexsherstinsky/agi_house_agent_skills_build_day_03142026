@@ -222,11 +222,14 @@ llm-council evaluate my_code.py --backend ollama
 
 ## Collecting Council Responses (Benchmarking)
 
-To collect multi-persona responses for benchmarking:
+Full pipeline — collect responses, judge them, and generate the visualization:
 
 ```bash
 source .venv/bin/activate
-python collect_responses.py
+python collect_responses.py   # → tmp/llm_council_results.md
+python judge_responses.py     # → tmp/llm_council_judgments.md
+python generate_site.py       # → docs/index.html
+open docs/index.html          # open in browser
 ```
 
 ---
