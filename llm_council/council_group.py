@@ -67,23 +67,23 @@ class CouncilGroup:
         )
         return response["message"]["content"]
 
-    def judge(self, responses: list[dict]) -> int | dict:
-        """Each member judges the responses independently; return the mean score.
+    # def judge(self, responses: list[dict]) -> int | dict:
+    #     """Each member judges the responses independently; return the mean score.
 
-        Returns just the mean int by default, or a full dict with per-member
-        'scores', 'mean', and 'stdev' when detailed=True.
-        """
-        scores = []
-        for member in self.members:
-            score = member.judge(responses)
-            scores.append({"name": member.name, "score": score})
+    #     Returns just the mean int by default, or a full dict with per-member
+    #     'scores', 'mean', and 'stdev' when detailed=True.
+    #     """
+    #     scores = []
+    #     for member in self.members:
+    #         score = member.judge(responses)
+    #         scores.append({"name": member.name, "score": score})
 
-        values = [s["score"] for s in scores]
-        mean = round(statistics.mean(values))
-        if self.detailed:
-            return {
-                "scores": scores,
-                "mean": mean,
-                "stdev": statistics.stdev(values) if len(values) > 1 else 0.0,
-            }
-        return mean
+    #     values = [s["score"] for s in scores]
+    #     mean = round(statistics.mean(values))
+    #     if self.detailed:
+    #         return {
+    #             "scores": scores,
+    #             "mean": mean,
+    #             "stdev": statistics.stdev(values) if len(values) > 1 else 0.0,
+    #         }
+    #     return mean
