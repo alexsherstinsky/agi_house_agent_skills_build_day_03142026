@@ -8,6 +8,33 @@ You can use it two ways:
 
 ---
 
+## Evaluate a Document (Quick Reference)
+
+Already installed? Here's how to evaluate a document right now.
+
+**From your terminal:**
+
+```bash
+# Run the full Council evaluation (calls an LLM)
+llm-council evaluate path/to/your_document.md
+
+# Preview which personas would review it (no LLM call)
+llm-council inspect path/to/your_document.md
+
+# Just see the generated prompt (no LLM call)
+llm-council evaluate path/to/your_document.md --dry-run
+```
+
+**From within Claude Code:**
+
+Open Claude Code in this project directory and type:
+
+> Use the LLM Council to evaluate the document in `path/to/your_document.md`
+
+That's it — Claude reads the file, calls the `llm_council_evaluate` MCP tool, and performs the multi-persona review.
+
+---
+
 ## Installation
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
