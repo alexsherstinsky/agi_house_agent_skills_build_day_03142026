@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "llm-council": {
+      "command": ".venv/bin/python3",
+      "args": ["-m", "llm_council_mcp.server"]
+    }
+  }
+}
