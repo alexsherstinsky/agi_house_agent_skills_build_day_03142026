@@ -1,6 +1,4 @@
-from llm_council import CouncilMember
-
-QUESTION = "What are the most important qualities of a good software engineer?"
+from llm_council import CouncilMember, TestCase
 
 COUNCIL_MEMBERS = [
     CouncilMember(
@@ -17,8 +15,16 @@ COUNCIL_MEMBERS = [
     ),
 ]
 
-for member in COUNCIL_MEMBERS:
-    print(f"\n{'='*60}")
-    print(f"Council Member: {member.name}")
-    print('='*60)
-    print(member.ask(QUESTION))
+
+def main():
+    test = TestCase(question="What are the most important qualities of a good software engineer?")
+
+    for member in COUNCIL_MEMBERS:
+        print(f"\n{'='*60}")
+        print(f"Council Member: {member.name}")
+        print('='*60)
+        print(member.ask(test.question))
+
+
+if __name__ == "__main__":
+    main()
