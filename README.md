@@ -46,12 +46,9 @@ uv venv
 uv pip install -e ".[dev]"
 ```
 
-To use Claude as the evaluation backend (recommended):
+This installs everything: `mcp`, `ollama`, `anthropic`, `pytest`, and the `llm-council` CLI.
 
-```bash
-uv pip install -e ".[dev,anthropic]"
-export ANTHROPIC_API_KEY="your-key-here"
-```
+**Note on API keys:** If you use the tool **from within Claude Code**, no API key is needed — your Claude Code subscription covers it. An `ANTHROPIC_API_KEY` is only required if you use the CLI with `--backend anthropic` (which calls the Anthropic API directly). For CLI usage without an API key, use `--backend ollama` with a local model instead.
 
 ---
 
