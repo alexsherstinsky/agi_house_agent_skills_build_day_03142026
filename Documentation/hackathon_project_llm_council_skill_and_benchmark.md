@@ -33,7 +33,8 @@ During validation phases, the Council approach is injected as review instruction
 
 - Design documents from production development workflow
 - Sprint plans with task breakdowns
-- Anonymization tooling for scrubbing internal details before use at a public hackathon
+- Additional datasets sourced by teammates
+- Anonymization tooling available if needed for scrubbing internal details
 
 ---
 
@@ -41,10 +42,10 @@ During validation phases, the Council approach is injected as review instruction
 
 Extract and generalize the LLM Council methodology into a reusable skill that any agent can invoke.
 
-**Inputs:**
+**Input:**
 - The artifact to evaluate (code, a plan, a design, generated text — anything)
-- Evaluation criteria (or let the Council infer them from the artifact type)
-- Council configuration (number of personas, persona descriptions, aggregation threshold)
+
+The system automatically infers evaluation criteria and Council configuration (persona count, persona types, aggregation thresholds) from the artifact's type and content.
 
 **Outputs:**
 - Per-persona chain-of-thought assessments
@@ -62,8 +63,8 @@ Extract and generalize the LLM Council methodology into a reusable skill that an
 
 ### Experimental Design
 
-1. Gather 5-8 real artifacts from production system (design docs, sprint plans, generated insights)
-2. Anonymize using existing tooling
+1. Gather 5-8 real artifacts (design docs, sprint plans, generated insights, teammate-sourced datasets)
+2. Anonymize if needed using existing tooling
 3. Evaluate each artifact with:
    - (a) Single-pass LLM review
    - (b) 3-persona Council
@@ -83,14 +84,22 @@ Comparative data and analysis showing where Council evaluation catches issues th
 
 ## Hackathon Day Plan
 
-| Time | Activity |
-|---|---|
-| 12:15–1:30 PM | Extract Council logic from workflow server into a standalone MCP tool. Define 3 artifact types it can evaluate (code, design doc, agent plan). |
-| 1:30–3:00 PM | Gather 5-8 real artifacts from the codebase. Anonymize them. Run single-pass vs. Council evaluations using Claude. |
-| 3:00–4:30 PM | Analyze results. Build comparison table/visualization. Identify where Council caught issues that single-pass missed (and vice versa). |
-| 4:30–5:30 PM | Write up findings as a structured report. Identify the optimal persona count. |
-| 5:30–7:00 PM | Prepare demo: narrative arc from problem to methodology to tool to experimental results to conclusions. |
-| 8:00–9:30 PM | Present. Lead with the problem ("agent outputs are hard to trust"), show the Council approach, present the data. |
+### Team Roles
+
+- **Tool building (Alex):** Extract Council logic from workflow server into a standalone MCP tool
+- **Datasets & benchmarking (3 teammates):** Source datasets, run the Council skill on them, analyze results
+- **Presentation (3 teammates):** Prepare and deliver the 3-minute demo to the hackathon audience
+
+### Schedule
+
+| Time | Tool Building | Datasets & Benchmarking |
+|---|---|---|
+| 12:15–1:30 PM | Extract Council into standalone MCP tool | Source and prepare evaluation datasets |
+| 1:30–3:00 PM | Refine tool, support teammates running it | Run single-pass vs. Council evaluations |
+| 3:00–4:30 PM | Iterate on tool based on findings | Analyze results, build comparison tables |
+| 4:30–5:30 PM | Finalize tool | Write up findings, identify optimal persona count |
+| 5:30–7:00 PM | All: Prepare 3-minute demo — problem → methodology → tool → results → conclusions |
+| 8:00–9:30 PM | All: Present |
 
 ---
 
@@ -98,5 +107,13 @@ Comparative data and analysis showing where Council evaluation catches issues th
 
 - **LLM:** Claude (via Claude Code)
 - **MCP Framework:** Model Context Protocol for tool definition and composability
-- **Anonymization:** Existing Content Discovery MCP Server tooling
-- **Source artifacts:** Production design docs, sprint plans, AI-generated insights from ConvoScience platform
+- **Anonymization (optional):** Available for scrubbing internal details if needed
+- **Source artifacts:** Production design docs, sprint plans, teammate-sourced datasets
+
+---
+
+## Appendix
+
+### Future Work
+
+- **User-configurable Council parameters** — Allow users to override the auto-inferred evaluation criteria, persona count, persona descriptions, and aggregation thresholds for domains where the defaults are a poor fit.
