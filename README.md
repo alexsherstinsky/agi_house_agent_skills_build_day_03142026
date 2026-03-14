@@ -1,67 +1,76 @@
-# AGI House Agent Skills Build Day
+# AGI House Agent Skills Build Day — LLM Council MCP Tool
 
-## LLM Council MCP Tool
+A standalone MCP tool that evaluates any artifact — code, design documents, project plans, or any text — using the **LLM Council methodology** (Zhao et al., 2024). Multiple independent reviewer personas analyze your artifact, then their findings are aggregated democratically by consensus strength.
 
-A standalone, domain-agnostic MCP tool that evaluates any artifact using the **LLM Council methodology** (Zhao et al., 2024) — multi-persona independent review with democratic aggregation.
-
-Given an artifact (code, design document, project plan, or any text), the tool:
-
-1. **Infers the artifact type** from its content
-2. **Selects reviewer personas** appropriate for that type (5–6 independent reviewers)
-3. **Generates a structured evaluation prompt** with chain-of-thought reasoning and democratic aggregation of findings
-
-## Setup
-
-Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+## Quick Start
 
 ```bash
-# Create virtual environment and install dependencies
+git clone <repo-url>
+cd agi_house_agent_skills_build_day_03142026
 uv venv
 uv pip install -e ".[dev]"
 ```
 
-### Ollama (Local LLM)
+Then open the project in Claude Code — the `llm_council_evaluate` tool is automatically available via `.mcp.json`.
 
-Install Ollama via Homebrew and Python dependencies:
+---
 
-```bash
-./setup.sh
-```
+## How to Use the LLM Council Tool
 
-## Running the Local Model
+### What It Does
 
-Run `llama3.2:3b` locally (pulls the model automatically on first run):
+You give it an artifact (any text). The tool:
 
-```bash
-# Interactive chat
-./scripts/run_llama.sh
+1. **Detects the artifact type** — is it code? a design doc? a project plan? something else?
+2. **Selects 5–6 reviewer personas** tailored to that type
+3. **Generates a structured evaluation** where each persona independently reviews the artifact using chain-of-thought reasoning
+4. **Aggregates findings democratically** — issues flagged by 3+ reviewers are HIGH PRIORITY, 2 reviewers = MEDIUM, 1 = LOWER
 
-# One-shot prompt
-./scripts/run_llama.sh "What is 2+2?"
-```
+### What You Get Back
 
-### Running Prompt Variants
+The tool returns a structured evaluation containing:
 
-Send 3 prompt variants of the same question to the local LLM and print responses:
+- **Per-persona assessments** — each reviewer's step-by-step analysis, specific feedback (with quotes from the artifact), and recommendations
+- **Consensus summary table** — every issue ranked by how many reviewers flagged it, with columns: Issue | Consensus | Reviewers | Recommendation
+- **Overall quality score** — 1–10 with justification
+- **Readiness assessment** — Ready / Needs Revision / Needs Major Revision
 
-```bash
-source .venv/bin/activate
-python main.py
-```
+### Using It in Claude Code
 
-## Using the LLM Council MCP Tool
+The `.mcp.json` is already configured. Just ask Claude to evaluate something:
 
-### In Claude Code
+**Evaluate inline text:**
+> Use the LLM Council to evaluate this code:
+> ```python
+> def process(data):
+>     query = f"SELECT * FROM users WHERE id = '{data}'"
+>     return db.execute(query)
+> ```
 
-The `.mcp.json` at the repo root is already configured. Claude Code will automatically discover the `llm_council_evaluate` tool.
-
-To invoke it, ask Claude to evaluate an artifact:
-
-> Evaluate this code using the LLM Council: `<paste code here>`
-
-Or reference a file:
-
+**Evaluate a file:**
 > Use the LLM Council to evaluate the design doc in `Documentation/my_design.md`
+
+**Evaluate a plan:**
+> Run the LLM Council on our sprint plan below: ...
+
+You don't need to specify the artifact type or personas — the tool infers everything automatically.
+
+### Using It Programmatically
+
+You can also call the core logic directly from Python:
+
+```python
+from llm_council_mcp.council import build_evaluation_prompt, infer_artifact_type
+
+artifact = open("my_design_doc.md").read()
+
+# See what type was detected
+print(infer_artifact_type(artifact))  # e.g., "design_doc"
+
+# Get the full evaluation prompt
+prompt = build_evaluation_prompt(artifact)
+print(prompt)
+```
 
 ### Running the MCP Server Directly
 
@@ -69,7 +78,74 @@ Or reference a file:
 .venv/bin/python3 -m llm_council_mcp.server
 ```
 
-The server communicates over stdio using the MCP protocol.
+The server communicates over stdio using the MCP protocol. Any MCP-compatible client can connect to it.
+
+---
+
+## Artifact Types and Personas
+
+The tool automatically selects reviewer personas based on what it detects:
+
+### Code
+Detected by: `def `, `class `, `function `, `import `, `const `, `return `, `try:`, `catch (`, etc.
+
+| Persona | What They Look For |
+|---|---|
+| Software Engineer | Correctness, bugs, edge cases, logic errors |
+| Code Reviewer | Readability, maintainability, conventions |
+| Security Engineer | Vulnerabilities, injection risks, input validation |
+| Performance Engineer | Unnecessary allocations, algorithmic complexity, caching |
+| QA Engineer | Testability, edge case coverage, missing test cases |
+
+### Design Documents
+Detected by: `## Overview`, `## Requirements`, `## Architecture`, `## API`, `## Data Model`, etc.
+
+| Persona | What They Look For |
+|---|---|
+| Systems Architect | Architecture soundness, component boundaries, scalability |
+| Product Manager | Problem-solution fit, requirements completeness, trade-offs |
+| Operations Engineer | Operability, monitoring, deployment, failure modes |
+| Security Engineer | Threat model, authentication, authorization, data protection |
+| Domain Expert | Domain model accuracy, technical claims, coverage gaps |
+
+### Project Plans
+Detected by: `## Tasks`, `## Timeline`, `## Sprint`, `## Milestones`, `## Deliverable`, etc.
+
+| Persona | What They Look For |
+|---|---|
+| Project Manager | Scope realism, dependencies, milestone achievability |
+| Technical Lead | Task definition quality, hidden complexities, missing tasks |
+| Risk Analyst | What can go wrong, risk identification, critical path |
+| QA Engineer | Testing accounted for, acceptance criteria, validation time |
+| Stakeholder | Value delivery, priority alignment, timeline acceptability |
+
+### General Text (Fallback)
+Used when no strong artifact type signal is found.
+
+| Persona | What They Look For |
+|---|---|
+| Target End User | Usefulness, practicality, immediate applicability |
+| Decision Maker | Problem relevance, actionability |
+| Domain Expert | Subject matter accuracy, correctness of claims |
+| Data Integrity Reviewer | Evidence support, fair use of statistics |
+| Editor | Clarity, flow, conciseness |
+| Data Usage Reviewer | Consent implications, guarantees, data usage consistency |
+
+---
+
+## Democratic Aggregation
+
+After all reviewers evaluate independently, findings are grouped by consensus:
+
+| Consensus Level | Threshold | Meaning |
+|---|---|---|
+| **HIGH PRIORITY** | 3+ reviewers flagged | Critical — must be addressed |
+| **MEDIUM PRIORITY** | 2 reviewers flagged | Important — worth addressing |
+| **LOWER PRIORITY** | 1 reviewer flagged | Suggestion — consider addressing |
+
+This ensures that issues with broad agreement surface first, while unique insights from individual reviewers are still captured.
+
+---
 
 ## Running Tests
 
@@ -77,40 +153,30 @@ The server communicates over stdio using the MCP protocol.
 uv run pytest tests/ -v
 ```
 
-This runs unit tests covering:
+17 unit tests covering artifact type detection, persona selection, and prompt generation.
 
-- **Artifact type detection** — code, design_doc, plan, general
-- **Persona selection** — correct personas for each detected type
-- **Prompt generation** — output structure includes all expected sections (per-persona assessments, consensus aggregation, quality score, readiness assessment)
+---
 
-## How It Works
+## Local LLM (Ollama)
 
-### Artifact Type Detection
+Separately from the LLM Council tool, this repo includes scripts for running a local LLM:
 
-The tool scans the input for keyword signals to classify it:
+```bash
+# Install Ollama and dependencies
+./setup.sh
 
-| Type | Example Signals |
-|---|---|
-| `code` | `def `, `class `, `function `, `import `, `const `, `return ` |
-| `design_doc` | `## Overview`, `## Requirements`, `## Architecture`, `## API` |
-| `plan` | `## Tasks`, `## Timeline`, `## Sprint`, `## Milestones` |
-| `general` | Fallback when no strong signal is found |
+# Interactive chat with llama3.2:3b
+./scripts/run_llama.sh
 
-### Reviewer Personas
+# One-shot prompt
+./scripts/run_llama.sh "What is 2+2?"
 
-Each artifact type has a tailored set of 5–6 reviewer personas. For example:
+# Run prompt variants
+source .venv/bin/activate
+python main.py
+```
 
-- **Code**: Software Engineer, Code Reviewer, Security Engineer, Performance Engineer, QA Engineer
-- **Design Doc**: Systems Architect, Product Manager, Operations Engineer, Security Engineer, Domain Expert
-- **Plan**: Project Manager, Technical Lead, Risk Analyst, QA Engineer, Stakeholder
-
-### Democratic Aggregation
-
-Findings are ranked by consensus strength:
-
-- **HIGH PRIORITY** (3+ reviewers flagged) — Critical issues that must be addressed
-- **MEDIUM PRIORITY** (2 reviewers flagged) — Important concerns worth addressing
-- **LOWER PRIORITY** (1 reviewer flagged) — Suggestions for consideration
+---
 
 ## Project Structure
 
