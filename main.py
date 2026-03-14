@@ -17,13 +17,21 @@ COUNCIL_MEMBERS = [
 
 
 def main():
-    test = TestCase(question="What are the most important qualities of a good software engineer?")
+    test_cases = [
+        TestCase(question="What are the most important qualities of a good software engineer?"),
+        TestCase(question="How should a team handle technical debt?"),
+        TestCase(question="What makes a software architecture decision good or bad?"),
+    ]
 
-    for member in COUNCIL_MEMBERS:
-        print(f"\n{'='*60}")
-        print(f"Council Member: {member.name}")
-        print('='*60)
-        print(member.ask(test.question))
+    for test in test_cases:
+        print(f"\n{'#'*60}")
+        print(f"Question: {test.question}")
+        print('#'*60)
+        for member in COUNCIL_MEMBERS:
+            print(f"\n{'='*60}")
+            print(f"Council Member: {member.name}")
+            print('='*60)
+            print(member.ask(test.question))
 
 
 if __name__ == "__main__":
