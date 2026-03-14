@@ -33,8 +33,7 @@ During validation phases, the Council approach is injected as review instruction
 
 - Design documents from production development workflow
 - Sprint plans with task breakdowns
-- CommandCenter-generated AI insights (agent coaching, manager reports)
-- Anonymization tooling already built (Content Discovery MCP Server)
+- Anonymization tooling for scrubbing internal details before use at a public hackathon
 
 ---
 
