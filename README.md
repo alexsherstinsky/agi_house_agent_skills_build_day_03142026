@@ -1,8 +1,16 @@
 # AGI House Agent Skills Build Day — LLM Council MCP Tool
 
-A standalone MCP tool that evaluates any artifact — code, design documents, project plans, or any text — using the **LLM Council methodology** (Zhao et al., 2024). Multiple independent reviewer personas analyze your artifact, then their findings are aggregated democratically by consensus strength.
+A standalone tool that evaluates any artifact — code, design documents, project plans, or any text — using the **LLM Council methodology** (Zhao et al., 2024). Multiple independent reviewer personas analyze your artifact, then their findings are aggregated democratically by consensus strength.
 
-## Quick Start
+You can use it two ways:
+- **From the command line** — `llm-council evaluate <file>`
+- **From within Claude Code** — ask Claude to evaluate something and the MCP tool is called automatically
+
+---
+
+## Installation
+
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone <repo-url>
@@ -11,35 +19,127 @@ uv venv
 uv pip install -e ".[dev]"
 ```
 
-Then open the project in Claude Code — the `llm_council_evaluate` tool is automatically available via `.mcp.json`.
+To use Claude as the evaluation backend (recommended):
+
+```bash
+uv pip install -e ".[dev,anthropic]"
+export ANTHROPIC_API_KEY="your-key-here"
+```
 
 ---
 
-## How to Use the LLM Council Tool
+## CLI Usage
 
-### What It Does
+After installation, the `llm-council` command is available. Run `llm-council --help` at any time:
 
-You give it an artifact (any text). The tool:
+```
+$ llm-council --help
 
-1. **Detects the artifact type** — is it code? a design doc? a project plan? something else?
-2. **Selects 5–6 reviewer personas** tailored to that type
-3. **Generates a structured evaluation** where each persona independently reviews the artifact using chain-of-thought reasoning
-4. **Aggregates findings democratically** — issues flagged by 3+ reviewers are HIGH PRIORITY, 2 reviewers = MEDIUM, 1 = LOWER
+usage: llm-council [-h] {evaluate,inspect,personas} ...
 
-### What You Get Back
+Evaluate artifacts using the LLM Council methodology — multi-persona review
+with democratic aggregation.
 
-The tool returns a structured evaluation containing:
+positional arguments:
+  {evaluate,inspect,personas}
+    evaluate            Evaluate an artifact using the LLM Council
+    inspect             Show detected artifact type and personas without evaluating
+    personas            List all available persona sets
+```
 
-- **Per-persona assessments** — each reviewer's step-by-step analysis, specific feedback (with quotes from the artifact), and recommendations
-- **Consensus summary table** — every issue ranked by how many reviewers flagged it, with columns: Issue | Consensus | Reviewers | Recommendation
-- **Overall quality score** — 1–10 with justification
-- **Readiness assessment** — Ready / Needs Revision / Needs Major Revision
+### `llm-council evaluate` — Run a Full Council Evaluation
 
-### Using It in Claude Code
+This is the main command. Give it a file (or `-` for stdin), and it calls an LLM to perform a multi-persona Council review.
 
-The `.mcp.json` is already configured. Just ask Claude to evaluate something:
+```bash
+# Evaluate a Python file
+llm-council evaluate my_code.py
 
-**Evaluate inline text:**
+# Evaluate a design document
+llm-council evaluate docs/design.md
+
+# Pipe text from stdin
+cat sprint_plan.md | llm-council evaluate -
+
+# Choose the LLM backend explicitly
+llm-council evaluate my_code.py --backend anthropic
+llm-council evaluate my_code.py --backend ollama
+
+# Use a specific model
+llm-council evaluate my_code.py --backend anthropic --model claude-sonnet-4-20250514
+llm-council evaluate my_code.py --backend ollama --model llama3.2:3b
+
+# Just print the evaluation prompt without calling an LLM
+llm-council evaluate my_code.py --dry-run
+```
+
+**What you get back:**
+
+- Per-persona assessments with chain-of-thought reasoning
+- A consensus summary table: Issue | Consensus | Reviewers | Recommendation
+- Overall quality score (1–10) with justification
+- Readiness assessment: Ready / Needs Revision / Needs Major Revision
+
+**Backend auto-detection:** By default (`--backend auto`), the tool tries the Anthropic (Claude) API first, then falls back to a local Ollama model. Use `--backend` to choose explicitly.
+
+### `llm-council inspect` — Preview What the Council Would Do
+
+Shows the detected artifact type and which reviewer personas would be selected, without calling an LLM.
+
+```bash
+$ llm-council inspect my_code.py
+
+Detected artifact type: code
+
+Reviewer personas (5):
+
+  1. Software Engineer
+     Is the code correct? Are there bugs, edge cases, or logic errors?
+
+  2. Code Reviewer
+     Is the code readable and maintainable? Does it follow conventions?
+
+  3. Security Engineer
+     Are there security vulnerabilities? Input validation issues? Injection risks?
+
+  4. Performance Engineer
+     Are there performance concerns? Unnecessary allocations, O(n^2) where O(n) is possible, missing caching opportunities?
+
+  5. QA Engineer
+     Is this testable? Are edge cases covered? What test cases are missing?
+```
+
+### `llm-council personas` — List All Available Persona Sets
+
+Shows every persona set the tool can select from, grouped by artifact type.
+
+```bash
+$ llm-council personas
+
+=== code (5 personas) ===
+  1. Software Engineer ...
+  2. Code Reviewer ...
+  ...
+
+=== design_doc (5 personas) ===
+  1. Systems Architect ...
+  ...
+
+=== plan (5 personas) ===
+  ...
+
+=== general (6 personas) ===
+  ...
+```
+
+---
+
+## Claude Code Usage (MCP)
+
+If you're working inside Claude Code, the LLM Council is available as an MCP tool automatically (configured in `.mcp.json`).
+
+Just ask Claude to evaluate something in natural language:
+
 > Use the LLM Council to evaluate this code:
 > ```python
 > def process(data):
@@ -47,103 +147,49 @@ The `.mcp.json` is already configured. Just ask Claude to evaluate something:
 >     return db.execute(query)
 > ```
 
-**Evaluate a file:**
-> Use the LLM Council to evaluate the design doc in `Documentation/my_design.md`
+> Run the LLM Council on the design doc in `Documentation/my_design.md`
 
-**Evaluate a plan:**
-> Run the LLM Council on our sprint plan below: ...
+> Evaluate our sprint plan using the LLM Council: ...
 
-You don't need to specify the artifact type or personas — the tool infers everything automatically.
-
-### Using It Programmatically
-
-You can also call the core logic directly from Python:
-
-```python
-from llm_council_mcp.council import build_evaluation_prompt, infer_artifact_type
-
-artifact = open("my_design_doc.md").read()
-
-# See what type was detected
-print(infer_artifact_type(artifact))  # e.g., "design_doc"
-
-# Get the full evaluation prompt
-prompt = build_evaluation_prompt(artifact)
-print(prompt)
-```
-
-### Running the MCP Server Directly
-
-```bash
-.venv/bin/python3 -m llm_council_mcp.server
-```
-
-The server communicates over stdio using the MCP protocol. Any MCP-compatible client can connect to it.
+Claude will call the `llm_council_evaluate` tool, which returns the structured evaluation prompt, and then Claude performs the multi-persona review.
 
 ---
 
-## Artifact Types and Personas
+## How It Works
 
-The tool automatically selects reviewer personas based on what it detects:
+### 1. Artifact Type Detection
 
-### Code
-Detected by: `def `, `class `, `function `, `import `, `const `, `return `, `try:`, `catch (`, etc.
+The tool scans the input for keyword signals to classify it:
 
-| Persona | What They Look For |
+| Type | Example Signals |
 |---|---|
-| Software Engineer | Correctness, bugs, edge cases, logic errors |
-| Code Reviewer | Readability, maintainability, conventions |
-| Security Engineer | Vulnerabilities, injection risks, input validation |
-| Performance Engineer | Unnecessary allocations, algorithmic complexity, caching |
-| QA Engineer | Testability, edge case coverage, missing test cases |
+| `code` | `def `, `class `, `function `, `import `, `const `, `return ` |
+| `design_doc` | `## Overview`, `## Requirements`, `## Architecture`, `## API` |
+| `plan` | `## Tasks`, `## Timeline`, `## Sprint`, `## Milestones` |
+| `general` | Fallback when no strong signal is found |
 
-### Design Documents
-Detected by: `## Overview`, `## Requirements`, `## Architecture`, `## API`, `## Data Model`, etc.
+### 2. Persona Selection
 
-| Persona | What They Look For |
-|---|---|
-| Systems Architect | Architecture soundness, component boundaries, scalability |
-| Product Manager | Problem-solution fit, requirements completeness, trade-offs |
-| Operations Engineer | Operability, monitoring, deployment, failure modes |
-| Security Engineer | Threat model, authentication, authorization, data protection |
-| Domain Expert | Domain model accuracy, technical claims, coverage gaps |
+Each artifact type has a tailored set of 5–6 reviewer personas:
 
-### Project Plans
-Detected by: `## Tasks`, `## Timeline`, `## Sprint`, `## Milestones`, `## Deliverable`, etc.
+- **Code**: Software Engineer, Code Reviewer, Security Engineer, Performance Engineer, QA Engineer
+- **Design Doc**: Systems Architect, Product Manager, Operations Engineer, Security Engineer, Domain Expert
+- **Plan**: Project Manager, Technical Lead, Risk Analyst, QA Engineer, Stakeholder
+- **General**: Target End User, Decision Maker, Domain Expert, Data Integrity Reviewer, Editor, Data Usage Reviewer
 
-| Persona | What They Look For |
-|---|---|
-| Project Manager | Scope realism, dependencies, milestone achievability |
-| Technical Lead | Task definition quality, hidden complexities, missing tasks |
-| Risk Analyst | What can go wrong, risk identification, critical path |
-| QA Engineer | Testing accounted for, acceptance criteria, validation time |
-| Stakeholder | Value delivery, priority alignment, timeline acceptability |
+### 3. Independent Evaluation
 
-### General Text (Fallback)
-Used when no strong artifact type signal is found.
+Each persona evaluates the artifact independently using chain-of-thought reasoning — step-by-step analysis before forming a judgment, with specific feedback referencing the artifact.
 
-| Persona | What They Look For |
-|---|---|
-| Target End User | Usefulness, practicality, immediate applicability |
-| Decision Maker | Problem relevance, actionability |
-| Domain Expert | Subject matter accuracy, correctness of claims |
-| Data Integrity Reviewer | Evidence support, fair use of statistics |
-| Editor | Clarity, flow, conciseness |
-| Data Usage Reviewer | Consent implications, guarantees, data usage consistency |
+### 4. Democratic Aggregation
 
----
-
-## Democratic Aggregation
-
-After all reviewers evaluate independently, findings are grouped by consensus:
+Findings are grouped by how many reviewers flagged them:
 
 | Consensus Level | Threshold | Meaning |
 |---|---|---|
 | **HIGH PRIORITY** | 3+ reviewers flagged | Critical — must be addressed |
 | **MEDIUM PRIORITY** | 2 reviewers flagged | Important — worth addressing |
 | **LOWER PRIORITY** | 1 reviewer flagged | Suggestion — consider addressing |
-
-This ensures that issues with broad agreement surface first, while unique insights from individual reviewers are still captured.
 
 ---
 
@@ -157,23 +203,19 @@ uv run pytest tests/ -v
 
 ---
 
-## Local LLM (Ollama)
+## Local LLM Setup (Ollama)
 
-Separately from the LLM Council tool, this repo includes scripts for running a local LLM:
+To use a local LLM instead of the Claude API:
 
 ```bash
 # Install Ollama and dependencies
 ./setup.sh
 
-# Interactive chat with llama3.2:3b
-./scripts/run_llama.sh
-
-# One-shot prompt
+# Verify Ollama is running
 ./scripts/run_llama.sh "What is 2+2?"
 
-# Run prompt variants
-source .venv/bin/activate
-python main.py
+# Then use the Council with Ollama
+llm-council evaluate my_code.py --backend ollama
 ```
 
 ---
@@ -185,6 +227,7 @@ python main.py
 ├── pyproject.toml             # Project metadata and dependencies
 ├── llm_council_mcp/
 │   ├── __init__.py
+│   ├── cli.py                 # CLI entry point (llm-council command)
 │   ├── server.py              # MCP server — tool registration and handling
 │   ├── council.py             # Core logic — type inference, personas, prompt generation
 │   └── resources/

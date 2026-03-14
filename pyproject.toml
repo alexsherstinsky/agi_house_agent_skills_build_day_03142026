@@ -9,9 +9,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+anthropic = [
+    "anthropic",
+]
 dev = [
     "pytest>=8.0",
 ]
+
+[project.scripts]
+llm-council = "llm_council_mcp.cli:main"
 
 [build-system]
 requires = ["hatchling"]

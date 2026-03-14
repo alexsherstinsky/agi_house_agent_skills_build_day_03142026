@@ -18,9 +18,16 @@
 - ✓ Verify persona selection matches detected artifact type (17 pytest tests)
 - ✓ Confirm output structure: per-persona assessments, consensus table, quality score, readiness (17 pytest tests)
 
+### CLI
+- ✓ `llm-council evaluate <file>` — full Council evaluation via LLM (supports `--backend anthropic|ollama|auto`, `--model`, `--dry-run`)
+- ✓ `llm-council inspect <file>` — preview detected type and personas without calling an LLM
+- ✓ `llm-council personas` — list all available persona sets
+- ✓ Stdin support (`-`) for all commands
+- ✓ Auto-detection of LLM backend (Anthropic → Ollama fallback)
+
 ### Documentation & Packaging
-- ✓ `pyproject.toml` with uv-compatible build system and dev dependencies
-- ✓ `README.md` — setup, usage (Claude Code + direct), running tests, how it works, project structure
+- ✓ `pyproject.toml` with uv-compatible build system, CLI entry point, and dev/anthropic optional dependencies
+- ✓ `README.md` — installation, full CLI help with examples, Claude Code usage, how it works, project structure
 - ✓ `tests/test_council.py` — 17 unit tests (all passing)
 
 ### Refinements & Iteration
