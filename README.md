@@ -1,4 +1,6 @@
-# LLM Council MCP Tool
+# AGI House Agent Skills Build Day
+
+## LLM Council MCP Tool
 
 A standalone, domain-agnostic MCP tool that evaluates any artifact using the **LLM Council methodology** (Zhao et al., 2024) — multi-persona independent review with democratic aggregation.
 
@@ -18,7 +20,36 @@ uv venv
 uv pip install -e ".[dev]"
 ```
 
-## Using the MCP Tool
+### Ollama (Local LLM)
+
+Install Ollama via Homebrew and Python dependencies:
+
+```bash
+./setup.sh
+```
+
+## Running the Local Model
+
+Run `llama3.2:3b` locally (pulls the model automatically on first run):
+
+```bash
+# Interactive chat
+./scripts/run_llama.sh
+
+# One-shot prompt
+./scripts/run_llama.sh "What is 2+2?"
+```
+
+### Running Prompt Variants
+
+Send 3 prompt variants of the same question to the local LLM and print responses:
+
+```bash
+source .venv/bin/activate
+python main.py
+```
+
+## Using the LLM Council MCP Tool
 
 ### In Claude Code
 
