@@ -415,21 +415,19 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-anthropic = [
-    { name = "anthropic" },
-]
 dev = [
+    { name = "anthropic" },
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "anthropic", marker = "extra == 'anthropic'" },
+    { name = "anthropic", marker = "extra == 'dev'" },
     { name = "mcp", specifier = ">=1.26.0" },
     { name = "ollama" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
 ]
-provides-extras = ["anthropic", "dev"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "mcp"

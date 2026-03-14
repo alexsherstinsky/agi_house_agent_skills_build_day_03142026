@@ -8,6 +8,33 @@ You can use it two ways:
 
 ---
 
+## Evaluate a Document (Quick Reference)
+
+Already installed? Here's how to evaluate a document right now.
+
+**From your terminal:**
+
+```bash
+# Run the full Council evaluation (calls an LLM)
+llm-council evaluate path/to/your_document.md
+
+# Preview which personas would review it (no LLM call)
+llm-council inspect path/to/your_document.md
+
+# Just see the generated prompt (no LLM call)
+llm-council evaluate path/to/your_document.md --dry-run
+```
+
+**From within Claude Code:**
+
+Open Claude Code in this project directory and type:
+
+> Use the LLM Council to evaluate the document in `path/to/your_document.md`
+
+That's it — Claude reads the file, calls the `llm_council_evaluate` MCP tool, and performs the multi-persona review.
+
+---
+
 ## Installation
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
@@ -19,12 +46,9 @@ uv venv
 uv pip install -e ".[dev]"
 ```
 
-To use Claude as the evaluation backend (recommended):
+This installs everything: `mcp`, `ollama`, `anthropic`, `pytest`, and the `llm-council` CLI.
 
-```bash
-uv pip install -e ".[dev,anthropic]"
-export ANTHROPIC_API_KEY="your-key-here"
-```
+**Note on API keys:** If you use the tool **from within Claude Code**, no API key is needed — your Claude Code subscription covers it. An `ANTHROPIC_API_KEY` is only required if you use the CLI with `--backend anthropic` (which calls the Anthropic API directly). For CLI usage without an API key, use `--backend ollama` with a local model instead.
 
 ---
 
