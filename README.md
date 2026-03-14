@@ -220,11 +220,26 @@ llm-council evaluate my_code.py --backend ollama
 
 ---
 
+## Collecting Council Responses (Benchmarking)
+
+To collect multi-persona responses for benchmarking:
+
+```bash
+source .venv/bin/activate
+python collect_responses.py
+```
+
+---
+
 ## Project Structure
 
 ```
 ├── .mcp.json                  # MCP server configuration for Claude Code
 ├── pyproject.toml             # Project metadata and dependencies
+├── collect_responses.py       # Benchmarking — collect multi-persona responses
+├── setup.sh                   # Ollama and dependency installation
+├── scripts/
+│   └── run_llama.sh           # Run local Ollama model
 ├── llm_council_mcp/
 │   ├── __init__.py
 │   ├── cli.py                 # CLI entry point (llm-council command)
