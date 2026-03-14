@@ -26,5 +26,5 @@ Send 3 prompt variants of the same question to the local LLM and print responses
 
 ```bash
 source .venv/bin/activate
-python main.py
+python collect_responses.py
 ```

@@ -1,3 +1,5 @@
+import pathlib
+
 from llm_council import CouncilMember, TestCase
 
 COUNCIL_MEMBERS = [
@@ -23,15 +25,26 @@ def main():
         TestCase(question="What makes a software architecture decision good or bad?"),
     ]
 
+    # Collect responses
+    results = []
     for test in test_cases:
-        print(f"\n{'#'*60}")
-        print(f"Question: {test.question}")
-        print('#'*60)
         for member in COUNCIL_MEMBERS:
-            print(f"\n{'='*60}")
-            print(f"Council Member: {member.name}")
-            print('='*60)
-            print(member.ask(test.question))
+            response = member.ask(test.question)
+            results.append({"test": test, "member": member, "response": response})
+
+    # Write markdown
+    lines = ["# LLM Council Results\n"]
+    current_question = None
+    for r in results:
+        if r["test"].question != current_question:
+            current_question = r["test"].question
+            lines.append(f"\n## {current_question}\n")
+        lines.append(f"### {r['member'].name}\n")
+        lines.append(f"{r['response']}\n")
+
+    out = pathlib.Path(__file__).parent / "tmp" / "llm_council_results.md"
+    out.write_text("\n".join(lines))
+    print(f"Results written to {out}")
 
 
 if __name__ == "__main__":
