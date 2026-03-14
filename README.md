@@ -96,7 +96,7 @@ Findings are ranked by consensus strength:
 │   └── test_council.py        # Unit tests
 └── Documentation/
     ├── hackathon_project_llm_council_skill_and_benchmark.md
-    └── PROGRESS_TRACKER.md
+    └── project_progress_tracker.md
 ```
 
 ## References
