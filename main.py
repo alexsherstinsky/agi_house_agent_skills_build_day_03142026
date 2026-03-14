@@ -3,7 +3,7 @@ import ollama
 MODEL = "llama3.2:3b"
 QUESTION = "What are the most important qualities of a good software engineer?"
 
-PERSONAS = [
+COUNCIL_MEMBERS = [
     {
         "name": "Senior Engineer",
         "system": "You are a pragmatic senior software engineer with 20 years of experience shipping production systems. You value reliability, simplicity, and clear communication above all.",
@@ -18,14 +18,14 @@ PERSONAS = [
     },
 ]
 
-for persona in PERSONAS:
+for member in COUNCIL_MEMBERS:
     print(f"\n{'='*60}")
-    print(f"Persona: {persona['name']}")
+    print(f"Council Member: {member['name']}")
     print('='*60)
     response = ollama.chat(
         model=MODEL,
         messages=[
-            {"role": "system", "content": persona["system"]},
+            {"role": "system", "content": member["system"]},
             {"role": "user", "content": QUESTION},
         ],
     )
