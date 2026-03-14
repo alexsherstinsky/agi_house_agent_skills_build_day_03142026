@@ -9,10 +9,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-anthropic = [
-    "anthropic",
-]
 dev = [
+    "anthropic",
     "pytest>=8.0",
 ]
 
