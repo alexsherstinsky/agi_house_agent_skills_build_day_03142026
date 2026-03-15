@@ -68,16 +68,20 @@ COUNCIL_MEMBERS_BIG = [
 ]
 
 
+ALL_TEST_CASES = [
+    TestCase(question="What are the most important qualities of a good software engineer?"),
+    TestCase(question="How should a team handle technical debt?"),
+    TestCase(question="What makes a software architecture decision good or bad?"),
+]
+
+
 def main(
     council_members: Optional[list[CouncilMember]] = None,
     output_path: Optional[pathlib.Path] = None,
+    big_question: bool = False,
 ):
     members = council_members or COUNCIL_MEMBERS
-    test_cases = [
-        TestCase(question="What are the most important qualities of a good software engineer?"),
-        TestCase(question="How should a team handle technical debt?"),
-        TestCase(question="What makes a software architecture decision good or bad?"),
-    ]
+    test_cases = ALL_TEST_CASES if big_question else ALL_TEST_CASES[:1]
 
     # Collect responses
     results = []
@@ -125,6 +129,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Use different Ollama models per member (llama3.2:3b, mistral, phi3)",
     )
+    parser.add_argument(
+        "--big-question",
+        action="store_true",
+        help="Ask all three questions (default: only the first question)",
+    )
     return parser.parse_args()
 
 
@@ -137,4 +146,4 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tmp_dir = pathlib.Path(__file__).parent / "tmp"
     output_path = tmp_dir / f"llm_council_results_{mode}_{timestamp}.md"
-    main(council_members=members, output_path=output_path)
+    main(council_members=members, output_path=output_path, big_question=args.big_question)
