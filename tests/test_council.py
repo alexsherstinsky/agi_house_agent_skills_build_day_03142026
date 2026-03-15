@@ -78,6 +78,54 @@ Migrate the monolith to microservices.
 """
         assert infer_artifact_type(artifact) == "plan"
 
+    def test_design_doc_with_code_snippets_detected_as_design_doc(self):
+        artifact = """\
+# System Design Document
+
+## Overview
+This service processes incoming events.
+
+## Architecture
+The system uses a pub/sub pattern with three components.
+
+## API
+
+```python
+class EventProcessor:
+    def process(self, event: dict) -> bool:
+        if event.get("type") == "critical":
+            return self.handle_critical(event)
+        return True
+```
+
+## Requirements
+- Handle 10k events per second
+"""
+        assert infer_artifact_type(artifact) == "design_doc"
+
+    def test_plan_with_code_snippets_detected_as_plan(self):
+        artifact = """\
+# Sprint 12 Plan
+
+## Tasks
+- [ ] Implement the new parser
+- [ ] Update the API client
+
+## Timeline
+- Week 1: Parser implementation
+- Week 2: Integration
+
+## Milestones
+1. Parser passes all tests
+
+Example code to refactor:
+```python
+def parse(data):
+    return json.loads(data)
+```
+"""
+        assert infer_artifact_type(artifact) == "plan"
+
     def test_falls_back_to_general(self):
         artifact = "The quick brown fox jumps over the lazy dog."
         assert infer_artifact_type(artifact) == "general"
