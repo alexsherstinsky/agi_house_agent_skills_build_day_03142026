@@ -25,7 +25,8 @@ _CONTEXT_WINDOWS: dict[str, int] = {
     "llama3.2:3b": 8_192,
     "mistral": 32_000,
     "gemini-2.0-flash": 1_048_576,
-    "gemini-2.5-flash-preview-05-20": 1_048_576,
+    "gemini-2.5-flash": 1_048_576,
+    "gemini-3-flash-preview": 1_048_576,
 }
 
 # Default context window when model is not in the registry.
@@ -36,7 +37,7 @@ _PROVIDER_DEFAULTS: dict[str, str] = {
     "anthropic": "claude-sonnet-4-20250514",
     "openai": "gpt-4o",
     "ollama": "llama3.2:3b",
-    "gemini": "gemini-2.0-flash",
+    "gemini": "gemini-2.5-flash",
 }
 
 SUPPORTED_PROVIDERS = frozenset(_PROVIDER_DEFAULTS.keys())
@@ -162,7 +163,7 @@ class OllamaBackend:
 class GeminiBackend:
     """Backend adapter for the Google Gemini API."""
 
-    def __init__(self, model: str = "gemini-2.0-flash") -> None:
+    def __init__(self, model: str = "gemini-2.5-flash") -> None:
         self.model = model
 
     def context_window(self) -> int:
@@ -237,10 +238,10 @@ def create_backend(backend_id: str) -> LLMBackend:
     elif provider == "ollama":
         return OllamaBackend(model=model)
     elif provider == "gemini":
-        api_key = os.environ.get("GEMINI_API_KEY")
+        api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError(
-                f"GEMINI_API_KEY not set. Required for backend '{backend_id}'."
+                f"GOOGLE_API_KEY not set. Required for backend '{backend_id}'."
             )
         return GeminiBackend(model=model)
     else:

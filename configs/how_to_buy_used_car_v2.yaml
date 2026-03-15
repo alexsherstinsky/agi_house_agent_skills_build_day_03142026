@@ -8,19 +8,19 @@ default_backend: anthropic/claude-opus-4-20250514
 aggregation_backend: anthropic/claude-opus-4-20250514
 personas:
 - role: Target End User
-  backend: gemini/gemini-2.0-flash
+  backend: gemini/gemini-2.5-flash
   temperature: 0.3
 - role: Decision Maker
   backend: anthropic/claude-opus-4-20250514
   temperature: 0.3
 - role: Domain Expert
-  backend: gemini/gemini-2.0-flash
+  backend: gemini/gemini-2.5-flash
   temperature: 0.3
 - role: Data Integrity Reviewer
   backend: anthropic/claude-opus-4-20250514
   temperature: 0.3
 - role: Editor
-  backend: gemini/gemini-2.0-flash
+  backend: gemini/gemini-2.5-flash
   temperature: 0.3
 - role: Data Usage Reviewer
   backend: anthropic/claude-opus-4-20250514
