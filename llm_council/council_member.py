@@ -20,7 +20,7 @@ def _chat_ollama(model: str, system: str, user: str) -> str:
     return response["message"]["content"]
 
 
-def ~(model: str, system: str, user: str) -> str:
+def _chat_openai(model: str, system: str, user: str) -> str:
     from openai import OpenAI
 
     client = OpenAI()

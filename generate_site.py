@@ -38,33 +38,6 @@ def parse_responses(path: pathlib.Path) -> list[dict]:
     return results
 
 
-def parse_judgments(path: pathlib.Path) -> dict:
-    """Parse llm_council_judgments.md → {scores: {judge: {judged: score}}, stats: {member: {mean, stdev}}}"""
-    scores = {}
-    stats = {}
-    headers = []
-
-    for line in path.read_text().splitlines():
-        if not line.startswith("|"):
-            continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
-        if not cells or cells[0].startswith("---"):
-            continue
-        label = cells[0].replace("**", "")
-        if label == "Judge":
-            headers = cells[1:]
-        elif label == "Mean":
-            for name, val in zip(headers, cells[1:]):
-                stats.setdefault(name, {})["mean"] = float(val)
-        elif label == "Std Dev":
-            for name, val in zip(headers, cells[1:]):
-                stats.setdefault(name, {})["stdev"] = float(val)
-        else:
-            scores[label] = {h: int(v) for h, v in zip(headers, cells[1:])}
-
-    return {"scores": scores, "stats": stats, "members": headers}
-
-
 # ── HTML template ──────────────────────────────────────────────────────────────
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -279,10 +252,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 def main():
     responses_path = ROOT / "tmp" / "llm_council_results.md"
-    judgments_path = ROOT / "tmp" / "llm_council_judgments.md"
+    judgments_path = ROOT / "tmp" / "llm_council_judgments.json"
 
     responses = parse_responses(responses_path)
-    judgments = parse_judgments(judgments_path)
+    judgments = json.loads(judgments_path.read_text())
 
     data = {
         "responses": responses,

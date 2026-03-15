@@ -1,4 +1,5 @@
 import argparse
+import json
 import pathlib
 import statistics
 from datetime import datetime
@@ -111,7 +112,8 @@ def main(
             {"question": r["question"], "response": r["response"]}
         )
 
-    judged_names = [m.name for m in members]
+    # judged_names = [m.name for m in members]
+    judged_names = list(by_member.keys())
 
     # Collect 9 scores: (judge, judged) pairs
     scores: dict[tuple[str, str], int] = {}
@@ -177,6 +179,15 @@ def parse_args() -> argparse.Namespace:
         help="Results file to judge (default: most recent llm_council_results_*.md in tmp/)",
     )
     return parser.parse_args()
+
+    json_data = {
+        "members": judged_names,
+        "scores": {j.name: {jd: scores[(j.name, jd)] for jd in judged_names} for j in COUNCIL_MEMBERS},
+        "stats": stats,
+    }
+    json_out = pathlib.Path(__file__).parent / "tmp" / "llm_council_judgments.json"
+    json_out.write_text(json.dumps(json_data, indent=2))
+    print(f"Judgments JSON written to {json_out}")
 
 
 if __name__ == "__main__":
