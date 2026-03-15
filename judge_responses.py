@@ -62,7 +62,7 @@ def main():
             {"question": r["question"], "response": r["response"]}
         )
 
-    judged_names = [m.name for m in COUNCIL_MEMBERS]
+    judged_names = list(by_member.keys())
 
     # Collect 9 scores: (judge, judged) pairs
     scores: dict[tuple[str, str], int] = {}

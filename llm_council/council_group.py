@@ -13,6 +13,7 @@ class CouncilGroup:
         detailed: bool = False,
     ):
         self.members = members
+        self.name = " & ".join(m.name for m in members)
         self.model = model
         self.detailed = detailed
 
