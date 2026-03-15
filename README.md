@@ -18,6 +18,13 @@ Already installed? Here's how to evaluate a document right now.
 # Run the full Council evaluation (calls an LLM)
 llm-council evaluate path/to/your_document.md
 
+# Use a specific backend
+llm-council evaluate path/to/your_document.md --backend anthropic
+llm-council evaluate path/to/your_document.md --backend ollama
+
+# Use a per-persona config (different LLM per reviewer)
+llm-council evaluate path/to/your_document.md --config council_config.yaml
+
 # Preview which personas would review it (no LLM call)
 llm-council inspect path/to/your_document.md
 
@@ -31,7 +38,7 @@ Open Claude Code in this project directory and type:
 
 > Use the LLM Council to evaluate the document in `path/to/your_document.md`
 
-That's it — Claude reads the file, calls the `llm_council_evaluate` MCP tool, and performs the multi-persona review.
+That's it — Claude reads the file, calls the `llm_council_evaluate` MCP tool, and performs the multi-persona review. No API keys needed.
 
 ---
 
@@ -48,7 +55,13 @@ uv pip install -e ".[dev]"
 
 This installs everything: `mcp`, `ollama`, `anthropic`, `pytest`, and the `llm-council` CLI.
 
-**Note on API keys:** If you use the tool **from within Claude Code**, no API key is needed — your Claude Code subscription covers it. An `ANTHROPIC_API_KEY` is only required if you use the CLI with `--backend anthropic` (which calls the Anthropic API directly). For CLI usage without an API key, use `--backend ollama` with a local model instead.
+**Note on API keys:** If you use the tool **from within Claude Code**, no API key is needed — your Claude Code subscription covers it. For CLI usage:
+
+| Backend | API Key Required | Env Var |
+|---|---|---|
+| `anthropic` | Yes | `ANTHROPIC_API_KEY` |
+| `openai` | Yes | `OPENAI_API_KEY` |
+| `ollama` | No (local) | — |
 
 ---
 
@@ -92,6 +105,9 @@ llm-council evaluate my_code.py --backend ollama
 # Use a specific model
 llm-council evaluate my_code.py --backend anthropic --model claude-sonnet-4-20250514
 llm-council evaluate my_code.py --backend ollama --model llama3.2:3b
+
+# Use a per-persona config file
+llm-council evaluate my_code.py --config council_config.yaml
 
 # Just print the evaluation prompt without calling an LLM
 llm-council evaluate my_code.py --dry-run
@@ -158,6 +174,38 @@ $ llm-council personas
 
 ---
 
+## Per-Persona Backend Configuration
+
+You can assign a different LLM to each reviewer persona using a YAML config file. This enables experimenting with which models are best suited for each review perspective.
+
+```yaml
+# council_config.yaml
+default_backend: anthropic/claude-sonnet-4-20250514
+aggregation_backend: anthropic/claude-opus-4-20250514
+
+personas:
+  - role: Software Engineer
+    backend: anthropic/claude-opus-4-20250514
+  - role: Code Reviewer
+    backend: openai/gpt-4o
+  - role: Security Engineer
+    backend: anthropic/claude-sonnet-4-20250514
+  - role: Performance Engineer
+    backend: ollama/llama3.2:3b
+  - role: QA Engineer
+    # no backend specified — uses default_backend
+```
+
+Use it from the CLI:
+
+```bash
+llm-council evaluate my_doc.md --config council_config.yaml
+```
+
+See `Documentation/design_multi_backend_council.md` for the full multi-backend design.
+
+---
+
 ## Claude Code Usage (MCP)
 
 If you're working inside Claude Code, the LLM Council is available as an MCP tool automatically (configured in `.mcp.json`).
@@ -183,7 +231,7 @@ Claude will call the `llm_council_evaluate` tool, which returns the structured e
 
 ### 1. Artifact Type Detection
 
-The tool scans the input for keyword signals to classify it:
+The tool scans the input for keyword signals to classify it. When multiple types have signals (e.g., a design doc with embedded code snippets), document-level types take priority: `design_doc > plan > code > general`.
 
 | Type | Example Signals |
 |---|---|
@@ -223,7 +271,7 @@ Findings are grouped by how many reviewers flagged them:
 uv run pytest tests/ -v
 ```
 
-17 unit tests covering artifact type detection, persona selection, and prompt generation.
+19 unit tests covering artifact type detection (including mixed-content documents), persona selection, and prompt generation.
 
 ---
 
@@ -275,11 +323,19 @@ open docs/index.html          # open in browser
 │   └── resources/
 │       └── llm_council_method.md  # LLM Council methodology reference
 ├── tests/
-│   └── test_council.py        # Unit tests
+│   └── test_council.py        # Unit tests (19 tests)
+├── datasets/                  # Evaluation artifacts and Council outputs
+│   ├── *.md                   # Source artifacts
+│   └── *.llm_council_evaluation*.claude.md  # Council evaluation results (per round)
 └── Documentation/
     ├── hackathon_project_llm_council_skill_and_benchmark.md
+    ├── design_multi_backend_council.md  # Multi-backend design doc (reviewed, 10/10)
     └── project_progress_tracker.md
 ```
+
+### Self-Referential Evaluation
+
+The multi-backend design doc (`Documentation/design_multi_backend_council.md`) was iteratively refined using the LLM Council tool itself — the tool evaluating its own design. Four rounds of Council review improved the score from 8/10 to 10/10, with all findings (HIGH through LOWER) addressed. The evaluation history is preserved in `datasets/` as a demonstration of the iterative improvement loop.
 
 ## References
 

@@ -193,6 +193,10 @@ def infer_artifact_type(artifact: str) -> str:
 
     Counts keyword signals for each type and returns the best match.
     Falls back to "general" if no strong signal is found.
+
+    When multiple types have signals (e.g., a design doc containing code
+    snippets), document-level types take priority: design_doc > plan > code.
+    This prevents mixed-content documents from being misclassified as code.
     """
     scores: dict[str, int] = {}
     for artifact_type, signals in _ARTIFACT_SIGNALS.items():
@@ -200,6 +204,13 @@ def infer_artifact_type(artifact: str) -> str:
 
     if not scores or max(scores.values()) == 0:
         return "general"
+
+    # Document-level types take priority over code when both have signals.
+    # A design doc with code snippets is still a design doc.
+    _TYPE_PRIORITY = ["design_doc", "plan", "code"]
+    for preferred in _TYPE_PRIORITY:
+        if scores.get(preferred, 0) > 0:
+            return preferred
 
     best = max(scores, key=scores.get)  # type: ignore[arg-type]
     return best
