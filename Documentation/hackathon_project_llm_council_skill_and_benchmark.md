@@ -110,6 +110,21 @@ Comparative data and analysis showing where Council evaluation catches issues th
 - **Anonymization (optional):** Available for scrubbing internal details if needed
 - **Source artifacts:** Production design docs, sprint plans, teammate-sourced datasets
 
+### CouncilMember and --big-models
+
+`collect_responses.py` and `judge_responses.py` use two council lists:
+
+- **Default:** All 3 members use Ollama (`llama3.2:3b`) to save tokens.
+- **With `--big-models`:** Same 3 personas, each on a different API (OpenAI, Claude, Gemini).
+
+```bash
+python collect_responses.py              # Ollama only
+python collect_responses.py --big-models # OpenAI + Claude + Gemini
+python judge_responses.py --big-models
+```
+
+Install big-model backends: `uv pip install openai anthropic google-generativeai`
+
 ---
 
 ## Appendix
