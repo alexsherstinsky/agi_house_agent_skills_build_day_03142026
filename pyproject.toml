@@ -6,11 +6,13 @@ requires-python = ">=3.11"
 dependencies = [
     "mcp>=1.26.0",
     "ollama",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "anthropic",
+    "openai",
     "pytest>=8.0",
 ]
 

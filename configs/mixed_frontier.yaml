@@ -1,0 +1,25 @@
+# Mixed frontier models — different backend per persona.
+# Requires: ANTHROPIC_API_KEY, OPENAI_API_KEY, Ollama running locally.
+#
+# This config demonstrates per-persona backend assignment.
+# Personas are auto-inferred from artifact type; this config
+# overrides the backend for each.
+default_backend: anthropic/claude-sonnet-4-20250514
+aggregation_backend: anthropic/claude-opus-4-20250514
+
+personas:
+  - role: Software Engineer
+    backend: anthropic/claude-opus-4-20250514
+    temperature: 0.3
+  - role: Code Reviewer
+    backend: openai/gpt-4o
+    temperature: 0.3
+  - role: Security Engineer
+    backend: anthropic/claude-sonnet-4-20250514
+    temperature: 0.2
+  - role: Performance Engineer
+    backend: ollama/llama3.2:3b
+    temperature: 0.3
+  - role: QA Engineer
+    backend: openai/gpt-4o
+    temperature: 0.3
