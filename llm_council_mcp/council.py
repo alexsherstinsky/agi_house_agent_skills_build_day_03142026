@@ -221,6 +221,122 @@ def get_personas(artifact_type: str) -> list[dict[str, str]]:
     return _PERSONAS_BY_TYPE.get(artifact_type, _PERSONAS_BY_TYPE["general"])
 
 
+def build_persona_prompt(artifact: str, persona: dict[str, str], artifact_type: str) -> str:
+    """Build an evaluation prompt for a single persona.
+
+    Used in single-backend and per-persona modes where each persona
+    is sent to its own LLM call.
+    """
+    perspective = persona.get("perspective", "")
+    methodology_note = ""
+    if _METHODOLOGY_PATH.exists():
+        methodology_note = (
+            "\n\nThis evaluation follows the LLM Council methodology "
+            "(Zhao et al., 2024 — \"Language Model Council: Democratically "
+            "Benchmarking Foundation Models on Highly Subjective Tasks\"; "
+            "see https://arxiv.org/pdf/2406.08598)."
+        )
+
+    return f"""\
+## LLM Council — Single Persona Evaluation
+
+**Detected artifact type**: {artifact_type}{methodology_note}
+
+---
+
+### Instructions
+
+You are **{persona['role']}**. Evaluate the artifact below from your professional \
+perspective.
+
+Your perspective: {perspective}
+
+1. **Think step-by-step** — use chain-of-thought reasoning to analyze the \
+artifact before forming a judgment.
+2. **Provide specific feedback** — quote or reference the relevant part of the \
+artifact when flagging an issue. Suggest concrete improvements.
+3. **State a recommendation** — what should be changed, and how important is it?
+
+---
+
+### Artifact to Evaluate
+
+```
+{artifact}
+```
+"""
+
+
+def build_aggregation_prompt(artifact: str, persona_evaluations: list[dict[str, str]]) -> str:
+    """Build an aggregation prompt that combines all persona evaluations.
+
+    Takes the original artifact and a list of dicts with keys:
+    role, backend, evaluation (the text output), and optionally status.
+    """
+    eval_sections: list[str] = []
+    completed = 0
+    for i, pe in enumerate(persona_evaluations, 1):
+        status = pe.get("status", "success")
+        if status != "success":
+            eval_sections.append(
+                f"## Reviewer {i}: {pe['role']}\n"
+                f"**Backend:** {pe.get('backend', 'unknown')}\n"
+                f"**Status:** FAILED — {pe.get('error', 'unknown error')}\n"
+            )
+        else:
+            completed += 1
+            eval_sections.append(
+                f"## Reviewer {i}: {pe['role']}\n"
+                f"**Backend:** {pe.get('backend', 'unknown')}\n\n"
+                f"{pe['evaluation']}\n"
+            )
+
+    all_evals = "\n---\n\n".join(eval_sections)
+    total = len(persona_evaluations)
+    partial_note = ""
+    if completed < total:
+        failed = [pe['role'] for pe in persona_evaluations if pe.get('status') != 'success']
+        partial_note = (
+            f"\n\n**Note:** {completed} of {total} personas completed. "
+            f"Failed: {', '.join(failed)}. "
+            f"Consensus thresholds are based on {completed} responding reviewers."
+        )
+
+    return f"""\
+## LLM Council — Democratic Aggregation
+
+You are aggregating the results of {total} independent reviewer evaluations \
+of an artifact. {completed} reviewers completed their evaluation.{partial_note}
+
+### Instructions
+
+1. **Group findings by consensus strength**:
+   - **HIGH PRIORITY** (3+ reviewers flagged): Critical issues that must be addressed.
+   - **MEDIUM PRIORITY** (2 reviewers flagged): Important concerns worth addressing.
+   - **LOWER PRIORITY** (1 reviewer flagged): Suggestions for consideration.
+
+2. **Present a summary table** with columns: Issue | Consensus | Reviewers | Recommendation.
+
+3. **Overall quality score**: Rate 1-10 with a brief justification.
+
+4. **Overall readiness assessment**: Ready / Needs Revision / Needs Major Revision.
+
+---
+
+### Original Artifact
+
+```
+{artifact}
+```
+
+---
+
+### Reviewer Evaluations
+
+{all_evals}
+"""
+
+
 def build_evaluation_prompt(artifact: str) -> str:
     """Build a complete LLM Council evaluation prompt for the given artifact.
 
