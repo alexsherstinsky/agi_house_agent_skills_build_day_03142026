@@ -75,6 +75,12 @@ Preview the mapping (no LLM calls):
 llm-council inspect my_design_doc.md --config my_eval.yaml
 ```
 
+Run the evaluation:
+
+```bash
+llm-council evaluate my_design_doc.md --config my_eval.yaml
+```
+
 **Option C — From within Claude Code (no API keys needed):**
 
 > Use the LLM Council to evaluate the document in `my_design_doc.md`
