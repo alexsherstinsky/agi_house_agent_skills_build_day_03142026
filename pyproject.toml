@@ -7,11 +7,13 @@ dependencies = [
     "mcp>=1.26.0",
     "ollama",
     "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "anthropic",
+    "openai",
     "pytest>=8.0",
 ]
 
