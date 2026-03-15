@@ -197,10 +197,23 @@ def infer_artifact_type(artifact: str) -> str:
     When multiple types have signals (e.g., a design doc containing code
     snippets), document-level types take priority: design_doc > plan > code.
     This prevents mixed-content documents from being misclassified as code.
+
+    Code signals require a minimum of 3 matches to trigger, because common
+    English words like "let", "private", "return", "import" appear in
+    non-code documents and would cause false positives.
     """
+    # Minimum signal count required per type to be considered a match.
+    _MIN_SIGNALS: dict[str, int] = {
+        "code": 3,       # English text often contains "let ", "private ", "return ", etc.
+        "design_doc": 1,
+        "plan": 1,
+    }
+
     scores: dict[str, int] = {}
     for artifact_type, signals in _ARTIFACT_SIGNALS.items():
-        scores[artifact_type] = sum(1 for s in signals if s in artifact)
+        count = sum(1 for s in signals if s in artifact)
+        min_required = _MIN_SIGNALS.get(artifact_type, 1)
+        scores[artifact_type] = count if count >= min_required else 0
 
     if not scores or max(scores.values()) == 0:
         return "general"

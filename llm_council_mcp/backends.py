@@ -24,6 +24,9 @@ _CONTEXT_WINDOWS: dict[str, int] = {
     "gpt-4o-mini": 128_000,
     "llama3.2:3b": 8_192,
     "mistral": 32_000,
+    "gemini-2.0-flash": 1_048_576,
+    "gemini-2.5-flash": 1_048_576,
+    "gemini-3-flash-preview": 1_048_576,
 }
 
 # Default context window when model is not in the registry.
@@ -34,6 +37,7 @@ _PROVIDER_DEFAULTS: dict[str, str] = {
     "anthropic": "claude-sonnet-4-20250514",
     "openai": "gpt-4o",
     "ollama": "llama3.2:3b",
+    "gemini": "gemini-2.5-flash",
 }
 
 SUPPORTED_PROVIDERS = frozenset(_PROVIDER_DEFAULTS.keys())
@@ -156,6 +160,40 @@ class OllamaBackend:
         return response["message"]["content"]
 
 
+class GeminiBackend:
+    """Backend adapter for the Google Gemini API."""
+
+    def __init__(self, model: str = "gemini-2.5-flash") -> None:
+        self.model = model
+
+    def context_window(self) -> int:
+        return _CONTEXT_WINDOWS.get(self.model, _DEFAULT_CONTEXT_WINDOW)
+
+    async def complete(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        generation_params: dict | None = None,
+    ) -> str:
+        from google import genai
+
+        params = generation_params or {}
+        temperature = params.get("temperature", DEFAULT_TEMPERATURE)
+        max_tokens = params.get("max_tokens", DEFAULT_MAX_TOKENS)
+
+        client = genai.Client()
+        response = await asyncio.to_thread(
+            client.models.generate_content,
+            model=self.model,
+            contents=f"{system_prompt}\n\n{user_prompt}",
+            config=genai.types.GenerateContentConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            ),
+        )
+        return response.text
+
+
 def parse_backend_id(backend_id: str) -> tuple[str, str]:
     """Parse a backend ID like 'anthropic/claude-opus-4-20250514' into (provider, model).
 
@@ -199,5 +237,12 @@ def create_backend(backend_id: str) -> LLMBackend:
         return OpenAIBackend(model=model)
     elif provider == "ollama":
         return OllamaBackend(model=model)
+    elif provider == "gemini":
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError(
+                f"GOOGLE_API_KEY not set. Required for backend '{backend_id}'."
+            )
+        return GeminiBackend(model=model)
     else:
         raise ValueError(f"Unknown provider: '{provider}'.")

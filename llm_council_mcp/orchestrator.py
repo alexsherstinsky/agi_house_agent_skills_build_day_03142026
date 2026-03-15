@@ -98,6 +98,8 @@ def validate_api_keys(backend_ids: set[str]) -> list[str]:
             errors.append(f"ANTHROPIC_API_KEY not set. Required for backend '{bid}'.")
         elif provider == "openai" and not os.environ.get("OPENAI_API_KEY"):
             errors.append(f"OPENAI_API_KEY not set. Required for backend '{bid}'.")
+        elif provider == "gemini" and not os.environ.get("GOOGLE_API_KEY"):
+            errors.append(f"GOOGLE_API_KEY not set. Required for backend '{bid}'.")
     return errors
 
 

@@ -16,6 +16,8 @@ from llm_council_mcp.council import (
 class TestInferArtifactType:
     def test_detects_code_python(self):
         artifact = """\
+import os
+
 def process_data(items: list) -> dict:
     result = {}
     for item in items:
@@ -126,6 +128,20 @@ def parse(data):
 """
         assert infer_artifact_type(artifact) == "plan"
 
+    def test_non_code_text_with_common_english_words(self):
+        """Text containing a single code-like word ('let') should not be classified as code."""
+        artifact = """\
+# How to Buy a Used Car
+
+## 1. Overview
+Buying a used car is one of the largest purchases most people make.
+
+## 3. Where to Buy
+If the seller refuses to let you take the car to a mechanic, walk away.
+You should always negotiate the total price, not the monthly payment.
+"""
+        assert infer_artifact_type(artifact) == "general"
+
     def test_falls_back_to_general(self):
         artifact = "The quick brown fox jumps over the lazy dog."
         assert infer_artifact_type(artifact) == "general"
@@ -178,17 +194,17 @@ class TestGetPersonas:
 
 class TestBuildEvaluationPrompt:
     def test_prompt_contains_artifact(self):
-        artifact = "def hello(): pass"
+        artifact = "import os\n\ndef hello():\n    return True"
         prompt = build_evaluation_prompt(artifact)
-        assert artifact in prompt
+        assert "def hello():" in prompt
 
     def test_prompt_contains_detected_type(self):
-        artifact = "def hello(): pass"
+        artifact = "import os\n\ndef hello():\n    return True"
         prompt = build_evaluation_prompt(artifact)
         assert "code" in prompt
 
     def test_prompt_contains_persona_roles(self):
-        artifact = "def hello(): pass"
+        artifact = "import os\n\ndef hello():\n    return True"
         prompt = build_evaluation_prompt(artifact)
         assert "Software Engineer" in prompt
         assert "Security Engineer" in prompt
