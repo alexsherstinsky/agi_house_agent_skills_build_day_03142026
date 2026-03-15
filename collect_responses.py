@@ -82,6 +82,11 @@ def main(
     results = []
     for test in test_cases:
         for member in members:
+            if isinstance(member, CouncilGroup):
+                names = ", ".join(m.name for m in member.members)
+                print(f"  [{names}] answering: {test.question}")
+            else:
+                print(f"  {member.name} answering: {test.question}")
             response = member.ask(test.question)
             results.append({"test": test, "member": member, "response": response})
 
