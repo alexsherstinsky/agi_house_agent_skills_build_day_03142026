@@ -1,4 +1,5 @@
 import argparse
+import json
 import pathlib
 from datetime import datetime
 from typing import Optional
@@ -105,6 +106,14 @@ def main(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("\n".join(lines))
     print(f"Results written to {output_path}")
+
+    json_data = [
+        {"question": r["test"].question, "member_name": r["member"].name, "response": r["response"]}
+        for r in results
+    ]
+    json_path = output_path.with_suffix(".json")
+    json_path.write_text(json.dumps(json_data, indent=2))
+    print(f"Results JSON written to {json_path}")
 
 
 def parse_args() -> argparse.Namespace:

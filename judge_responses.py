@@ -53,42 +53,11 @@ COUNCIL_MEMBERS_BIG = [
 ]
 
 
-def parse_results(path: pathlib.Path) -> list[dict]:
-    results = []
-    question = None
-    member_name = None
-    response_lines = []
-
-    for line in path.read_text().splitlines():
-        if line.startswith("## "):
-            question = line[3:].strip()
-        elif line.startswith("### "):
-            if member_name and response_lines:
-                results.append({
-                    "question": question,
-                    "member_name": member_name,
-                    "response": "\n".join(response_lines).strip(),
-                })
-            member_name = line[4:].strip()
-            response_lines = []
-        elif member_name:
-            response_lines.append(line)
-
-    if member_name and response_lines:
-        results.append({
-            "question": question,
-            "member_name": member_name,
-            "response": "\n".join(response_lines).strip(),
-        })
-
-    return results
-
-
 def _latest_results_path(tmp_dir: pathlib.Path) -> pathlib.Path:
-    """Path to the most recent llm_council_results_*.md in tmp."""
-    pattern = list(tmp_dir.glob("llm_council_results_*.md"))
+    """Path to the most recent llm_council_results_*.json in tmp."""
+    pattern = list(tmp_dir.glob("llm_council_results_*.json"))
     if not pattern:
-        return tmp_dir / "llm_council_results.md"
+        return tmp_dir / "llm_council_results.json"
     return max(pattern, key=lambda p: p.stat().st_mtime)
 
 
@@ -103,7 +72,7 @@ def main(
         results_path = _latest_results_path(tmp_dir)
     if not results_path.exists():
         raise FileNotFoundError(f"Results file not found: {results_path}. Run collect_responses.py first.")
-    responses = parse_results(results_path)
+    responses = json.loads(results_path.read_text())
 
     # Group responses by member name
     by_member: dict[str, list[dict]] = {}
@@ -162,6 +131,15 @@ def main(
     output_path.write_text("\n".join(lines) + "\n")
     print(f"\nJudgments written to {output_path}")
 
+    json_data = {
+        "members": judged_names,
+        "scores": {j.name: {jd: scores[(j.name, jd)] for jd in judged_names} for j in members},
+        "stats": stats,
+    }
+    json_out = output_path.with_suffix(".json")
+    json_out.write_text(json.dumps(json_data, indent=2))
+    print(f"Judgments JSON written to {json_out}")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -176,18 +154,9 @@ def parse_args() -> argparse.Namespace:
         "--input-file",
         type=pathlib.Path,
         default=None,
-        help="Results file to judge (default: most recent llm_council_results_*.md in tmp/)",
+        help="Results JSON file to judge (default: most recent llm_council_results_*.json in tmp/)",
     )
     return parser.parse_args()
-
-    json_data = {
-        "members": judged_names,
-        "scores": {j.name: {jd: scores[(j.name, jd)] for jd in judged_names} for j in COUNCIL_MEMBERS},
-        "stats": stats,
-    }
-    json_out = pathlib.Path(__file__).parent / "tmp" / "llm_council_judgments.json"
-    json_out.write_text(json.dumps(json_data, indent=2))
-    print(f"Judgments JSON written to {json_out}")
 
 
 if __name__ == "__main__":
